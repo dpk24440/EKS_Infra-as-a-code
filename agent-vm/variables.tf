@@ -1,3 +1,61 @@
+# Variables for Self-hosted Agents VPC
+variable "AGENT_VPC_NAME" {
+  type    = string
+  default = "agent-vpc"
+}
+
+variable "AGENT_ADDRESS_SPACE" {
+  type    = string
+  default = "192.168.0.0"
+}
+
+variable "AGENT_SUBNET_NAME" {
+  type    = string
+  default = ""
+}
+
+variable "AGENT_SUBNET_ADDRESS_PREFIX" {
+  type    = string
+  default = "192.168.0.0/22"
+}
+
+variable "AGENT_VM_NAME" {
+  type        = string
+  default     = "my-agent-vm"
+  description = "The name of the EC2 instance (equivalent to AGENT_VM_NAME in Azure)"
+}
+
+variable "AWS_REGION" {
+  type        = string
+  default     = "ap-southeast-1"
+  description = "The AWS region where the EC2 instance will be deployed (equivalent to LOCATION in Azure)"
+}
+
+variable "INSTANCE_TYPE" {
+  type        = string
+  default     = "t2.micro"
+  description = "The instance type for the EC2 instance (equivalent to VM_SIZE in Azure)"
+}
+
+variable "AMI_ID" {
+  type        = string
+  default     = "ami-0abcdef1234567890" # Replace with your desired AMI ID
+  description = "The Amazon Machine Image (AMI) ID to use for the EC2 instance"
+}
+
+variable "KEY_NAME" {
+  type        = string
+  default     = "my-key-pair"
+  description = "The name of the SSH key pair to use for authentication (replaces ADMIN_USERNAME and ADMIN_PASSWORD)"
+}
+
+variable "USER_DATA" {
+  type        = string
+  description = "Optional user data script to bootstrap the instance (e.g., Docker installation)"
+  default     = ""
+}
+#######################################################################
+#######################################################################
 
 variable "AGENT_VM_NAME" {
   type        = string

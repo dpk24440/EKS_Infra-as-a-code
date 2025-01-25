@@ -27,9 +27,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "kubeprojactions24440"
+    bucket = "mystorage1791"
     key    = "terraform.tfstate"
-    region = "us-east-2"
+    region = "ap-southeast-1"
   }
 
   required_version = "~> 1.6.3"
