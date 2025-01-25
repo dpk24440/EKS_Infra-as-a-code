@@ -57,6 +57,7 @@ jobs:
                             -backend-config="key=vpc/terraform.tfstate" \
                             -backend-config="region=${{ env.AWS_REGION }}" \
                              #-backend-config="dynamodb_table=terraform-lock"
+        working-directory: ./virtual-network
 
       - name: Apply Terraform for VPC
         run: terraform apply -auto-approve
