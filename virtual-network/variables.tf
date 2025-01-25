@@ -29,7 +29,7 @@ variable "APPGW_SUBNET_ADDRESS_PREFIX" {
   default = "172.16.0.0/22"
 }
 
-# Variables for ECR VPC (equivalent to ACR in Azure)
+## Variables for ECR VPC (equivalent to ACR in Azure)
 variable "ECR_VPC_NAME" {
   type = string
 }
