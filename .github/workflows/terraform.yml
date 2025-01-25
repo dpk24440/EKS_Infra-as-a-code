@@ -25,11 +25,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip
-          LATEST_VERSION=$(curl -s https://releases.hashicorp.com/terraform/ | grep -oP 'terraform/\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform/releases/latest | jq -r '.tag_name' | sed 's/v//')
+          echo "Installing Terraform version $LATEST_VERSION"
           wget https://releases.hashicorp.com/terraform/${LATEST_VERSION}/terraform_${LATEST_VERSION}_linux_amd64.zip
           unzip terraform_${LATEST_VERSION}_linux_amd64.zip
           sudo mv terraform /usr/local/bin/
-
           terraform version # Validate Terraform is installed and accessible
 
       - name: Configure AWS Credentials
