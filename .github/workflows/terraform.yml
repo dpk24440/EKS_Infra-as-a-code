@@ -32,6 +32,9 @@ jobs:
           sudo mv terraform /usr/local/bin/
           terraform version # Validate Terraform is installed and accessible
 
+      - name: Ensure Terraform is in PATH
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
