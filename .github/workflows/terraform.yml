@@ -1,0 +1,137 @@
+name: AWS Terraform Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  TF_LOG: DEBUG
+  AWS_REGION: ap-southeast-1 # Adjust the region as required
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  # S3 bucket for the terraform state
+  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
+
+jobs:
+  setup-environment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+  create-vpc:
+    needs: setup-environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Initialize Terraform for VPC
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_TF_STATE }}" \
+                             -backend-config="key=vpc/terraform.tfstate" \
+                             -backend-config="region=${{ env.AWS_REGION }}" \
+                             #-backend-config="dynamodb_table=terraform-lock"
+
+      - name: Apply Terraform for VPC
+        run: terraform apply -auto-approve
+        working-directory: ./virtual-network
+
+  create-vm:
+    needs: create-vpc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Initialize Terraform for EC2
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_TF_STATE }}" \
+                             -backend-config="key=ec2/terraform.tfstate" \
+                             -backend-config="region=${{ env.AWS_REGION }}" \
+                             #-backend-config="dynamodb_table=terraform-lock"
+
+      - name: Apply Terraform for EC2
+        run: terraform apply -auto-approve
+        working-directory: ./agent-vm
+
+  create-ecr:
+    needs: create-vm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Initialize Terraform for ECR
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_TF_STATE }}" \
+                             -backend-config="key=ecr/terraform.tfstate" \
+                             -backend-config="region=${{ env.AWS_REGION }}" \
+                             #-backend-config="dynamodb_table=terraform-lock"
+
+      - name: Apply Terraform for ECR
+        run: terraform apply -auto-approve
+        working-directory: ./private-ecr
+
+  create-db:
+    needs: create-ecr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Initialize Terraform for RDS
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_TF_STATE }}" \
+                             -backend-config="key=rds/terraform.tfstate" \
+                             -backend-config="region=${{ env.AWS_REGION }}" \
+                             #-backend-config="dynamodb_table=terraform-lock"
+
+      - name: Apply Terraform for RDS
+        run: terraform apply -auto-approve
+        working-directory: ./sql-dbserver
+
+  create_appgw:
+    needs: create-db
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Initialize Terraform for appgw
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_TF_STATE }}" \
+                             -backend-config="key=appgw/terraform.tfstate" \
+                             -backend-config="region=${{ env.AWS_REGION }}" \
+                             #-backend-config="dynamodb_table=terraform-lock"
+
+      - name: Apply Terraform for appgw
+        run: terraform apply -auto-approve
+        working-directory: ./application-loadbalancer
+
+  create_eks:
+    needs: create_appgw
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Initialize Terraform for eks 
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_TF_STATE }}" \
+                             -backend-config="key=eks/terraform.tfstate" \
+                             -backend-config="region=${{ env.AWS_REGION }}" \
+                             #-backend-config="dynamodb_table=terraform-lock"
+
+      - name: Apply Terraform for eks
+        run: terraform apply -auto-approve
+        working-directory: ./private-eks
+
+
