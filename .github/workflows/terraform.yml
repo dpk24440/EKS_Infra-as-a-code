@@ -21,10 +21,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.4.0
+      - name: Install Terraform (Manual Installation)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          LATEST_VERSION=$(curl -s https://releases.hashicorp.com/terraform/ | grep -oP 'terraform/\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          wget https://releases.hashicorp.com/terraform/${LATEST_VERSION}/terraform_${LATEST_VERSION}_linux_amd64.zip
+          unzip terraform_${LATEST_VERSION}_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+
+          terraform version # Validate Terraform is installed and accessible
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
